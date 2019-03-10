@@ -5,7 +5,7 @@ frames = 0
 class Agent:
     EPS_START = 1.0
     EPS_STOP  = 0.3
-    EPS_STEPS = 2e6
+    EPS_STEPS = 75000
     
     GAMMA = 0.99
     N_STEP_RETURN = 8

@@ -12,7 +12,7 @@ class Brain:
     LEARNING_RATE = 5e-3
 
     LOSS_V = .5            # v loss coefficient
-    LOSS_ENTROPY = .05     # entropy coefficient
+    LOSS_ENTROPY = .01     # entropy coefficient
     
     GAMMA = 0.99
     N_STEP_RETURN = 8
