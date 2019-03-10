@@ -3,6 +3,8 @@ from util_logger import Logger
 import util_state as state_util
 import util_display as display
 
+import matplotlib.pyplot as plt
+
 import numpy as np
 import threading, time
 
@@ -12,13 +14,15 @@ class Environment(threading.Thread):
     stop_signal = False
     THREAD_DELAY = 0.001
 
-    def __init__(self, env, agent, render=False):
+    def __init__(self, env, rewards, agent, render=False):
         threading.Thread.__init__(self)
 
         self.render = render
         self.env = env
         self.agent = agent
-
+        
+        self.rewards = rewards
+        
     def runEpisode(self):
         frame = self.env.reset()
         s = state_util.create(preprocess(frame))
@@ -45,9 +49,10 @@ class Environment(threading.Thread):
             R += r
 
             if done or self.stop_signal:
+                self.rewards.append(R)
                 break
 
-        logger.log("{}".format(R))
+        #logger.log("{}".format(R))
 
     def run(self):
         while not self.stop_signal:

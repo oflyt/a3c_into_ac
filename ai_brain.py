@@ -1,4 +1,4 @@
-import threading, time
+import threading, time, os
 
 import numpy as np
 import tensorflow as tf
@@ -11,8 +11,8 @@ class Brain:
     MIN_BATCH = 32
     LEARNING_RATE = 5e-3
 
-    LOSS_V = .4            # v loss coefficient
-    LOSS_ENTROPY = .25     # entropy coefficient
+    LOSS_V = .5            # v loss coefficient
+    LOSS_ENTROPY = .05     # entropy coefficient
     
     GAMMA = 0.99
     N_STEP_RETURN = 8
@@ -20,7 +20,7 @@ class Brain:
     
     train_queue = [ [], [], [], [], [] ]    # s, a, r, s', s' terminal mask
     lock_queue = threading.Lock()
-
+    
     def __init__(self, n_state, n_actions, model_weights=None):
         self.n_state = n_state
         self.n_actions = n_actions
@@ -40,7 +40,7 @@ class Brain:
         self.default_graph = tf.get_default_graph()
 
         self.default_graph.finalize()    # avoid modifications
-
+        
     def _build_model(self):
         
         l_input = Input(batch_shape=(None,) + self.n_state)
@@ -77,15 +77,15 @@ class Brain:
         log_prob = tf.log( tf.reduce_sum(p * a_t, axis=1, keepdims=True) + 1e-10)
         advantage = r_t - v
 
-        loss_policy = - log_prob * tf.stop_gradient(advantage)                                    # maximize policy
-        loss_value  = self.LOSS_V * tf.square(advantage)                                                # minimize value error
-        entropy = self.LOSS_ENTROPY * tf.reduce_sum(p * tf.log(p + 1e-10), axis=1, keepdims=True)    # maximize entropy (regularization)
+        loss_policy = - log_prob * tf.stop_gradient(advantage)
+        loss_value  = self.LOSS_V * tf.square(advantage)
+        entropy = self.LOSS_ENTROPY * tf.reduce_sum(p * tf.log(p + 1e-10), axis=1, keepdims=True)    
 
         loss_total = tf.reduce_mean(loss_policy + loss_value + entropy)
 
         optimizer = tf.train.RMSPropOptimizer(self.LEARNING_RATE, decay=.99)
         minimize = optimizer.minimize(loss_total)
-
+        
         return s_t, a_t, r_t, minimize
 
     def optimize(self):
