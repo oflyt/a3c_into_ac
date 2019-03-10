@@ -1,20 +1,22 @@
 import random
 import numpy as np
 
-frames = 0
+episodes = 0
 class Agent:
     EPS_START = 1.0
     EPS_STOP  = 0.3
-    EPS_STEPS = 75000
+    EPS_EPISODES = 6e3
     
     GAMMA = 0.99
     N_STEP_RETURN = 8
     GAMMA_N = GAMMA ** N_STEP_RETURN
     
-    def __init__(self, brain, n_actions, eps_start=EPS_START, eps_end=EPS_STOP, eps_steps=EPS_STEPS):
+    def __init__(self, brain, n_actions, start_epi=0, eps_start=EPS_START, eps_end=EPS_STOP, eps_episodes=EPS_EPISODES):
         self.eps_start = eps_start
         self.eps_end   = eps_end
-        self.eps_steps = eps_steps
+        self.eps_episodes = eps_episodes
+        
+        global episodes; episodes = start_epi
         
         self.brain = brain
         self.n_actions = n_actions
@@ -23,14 +25,13 @@ class Agent:
         self.R = 0.
 
     def getEpsilon(self):
-        if(frames >= self.eps_steps):
+        if(episodes >= self.eps_episodes):
             return self.eps_end
         else:
-            return self.eps_start + frames * (self.eps_end - self.eps_start) / self.eps_steps    # linearly interpolate
+            return self.eps_start + episodes * (self.eps_end - self.eps_start) / self.eps_episodes    # linearly interpolate
 
     def act(self, s):
         eps = self.getEpsilon()            
-        global frames; frames = frames + 1
 
         if random.random() < eps:
             return random.randint(0, self.n_actions-1)
@@ -59,6 +60,8 @@ class Agent:
         self.R = ( self.R + r * self.GAMMA_N ) / self.GAMMA
 
         if s_ is None:
+            global episodes; episodes += 1
+            
             while len(self.memory) > 0:
                 n = len(self.memory)
                 s, a, r, s_ = get_sample(self.memory, n)
