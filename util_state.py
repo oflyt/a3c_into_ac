@@ -2,18 +2,21 @@ import numpy as np
 from collections import deque
 
 def update(state, frame_1, frame_2):
+    "Update the array to have frame_1 and frame_2 at index 2 and 3 respectively"
     next_state = state.copy()
     next_state.append(frame_1)
     next_state.append(frame_2)
     return next_state
 
 def create(frame):
+    "Create an array of 4 duplicates of the same frame"
     state = deque(maxlen=4)
     for _ in range(4):
         state.append(frame)
     return state
 
 if __name__ == '__main__':
+    ## Simple testing of the functions
     frame1 = np.array([1])
     frame2 = np.array([2])
     frame3 = np.array([3])

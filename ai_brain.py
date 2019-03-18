@@ -34,7 +34,10 @@ class Brain:
         self.graph = self._build_graph(self.model)
         
         if model_weights is not None:
-            self.model.load_weights(model_weights)
+            if not os.path.isfile(model_weights):
+                print("Could not find weights file")
+            else:
+                self.model.load_weights(model_weights)
 
         self.session.run(tf.global_variables_initializer())
         self.default_graph = tf.get_default_graph()
@@ -42,6 +45,11 @@ class Brain:
         self.default_graph.finalize()    # avoid modifications
         
     def _build_model(self):
+        """Build the neural network
+        
+        The neural network will be used to predict the policy, actor
+        And to predict the value of an action given a state, critic
+        """
         
         l_input = Input(batch_shape=(None,) + self.n_state)
         
@@ -68,6 +76,15 @@ class Brain:
         return model
 
     def _build_graph(self, model):
+        """ Build a custom loss function for the optimization of the neural network
+        
+        There are three different losses that are combined, policy, value and entropy
+        
+        Policy looks at which actions should be chosen
+        Value looks at which actions has what value in a given state
+        Entropy restricts the neural network to overfit to one set of actions
+        """
+        
         s_t = tf.placeholder(tf.float32, shape=(None,) + self.n_state)
         a_t = tf.placeholder(tf.float32, shape=(None, self.n_actions))
         r_t = tf.placeholder(tf.float32, shape=(None, 1)) # not immediate, but discounted n step reward
@@ -89,6 +106,8 @@ class Brain:
         return s_t, a_t, r_t, minimize
 
     def optimize(self):
+        "Optimize the neural network by taking a batch of observations provided by the agents"
+        
         if len(self.train_queue[0]) < self.MIN_BATCH:
             time.sleep(0)    # yield
             return
@@ -115,6 +134,8 @@ class Brain:
         self.session.run(minimize, feed_dict={s_t: s, a_t: a, r_t: r})
 
     def train_push(self, s, a, r, s_):
+        "Handles the incoming observations"
+        
         with self.lock_queue:
             self.train_queue[0].append(s)
             self.train_queue[1].append(a)
@@ -128,21 +149,25 @@ class Brain:
                 self.train_queue[4].append(1.)
 
     def predict(self, s):
+        "Get policy and value for state"
         with self.default_graph.as_default():
             p, v = self.model.predict(s)
             return p, v
 
     def predict_p(self, s):
+        "Get policy for state"
         with self.default_graph.as_default():
             p, v = self.model.predict(s)        
             return p
 
     def predict_v(self, s):
+        "Get value for state"
         with self.default_graph.as_default():
             p, v = self.model.predict(s)        
             return v
         
     def save_weights(self, name):
+        "Save the current weights of the neural network"
         try:
             self.model.save_weights(name)
         except KeyboardInterrupt:

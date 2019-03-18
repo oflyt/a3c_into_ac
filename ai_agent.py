@@ -5,7 +5,7 @@ episodes = 0
 class Agent:
     EPS_START = 1.0
     EPS_STOP  = 0.3
-    EPS_EPISODES = 6e3
+    EPS_EPISODES = 8e3
     
     GAMMA = 0.99
     N_STEP_RETURN = 8
@@ -25,12 +25,19 @@ class Agent:
         self.R = 0.
 
     def getEpsilon(self):
+        "Calculate epsilon based on the current episode and the decay of epsilon"
         if(episodes >= self.eps_episodes):
             return self.eps_end
         else:
-            return self.eps_start + episodes * (self.eps_end - self.eps_start) / self.eps_episodes    # linearly interpolate
+            # linearly interpolate
+            return self.eps_start + episodes * (self.eps_end - self.eps_start) / self.eps_episodes    
 
     def act(self, s):
+        """ Choose action
+        
+        With epsilon probability, take a random action
+        Otherwise choose an action acording their probabilities
+        """
         eps = self.getEpsilon()            
 
         if random.random() < eps:
@@ -46,6 +53,11 @@ class Agent:
             return a
     
     def train(self, s, a, r, s_):
+        """ Add the observation to the brain
+        
+        Calculate the accumulated reward over the last n-steps and add to the brain
+        If the "next state" is None, i.e., the epsiode is over, push all the following observations to brain
+        """
         def get_sample(memory, n):
             s, a, _, _  = memory[0]
             _, _, _, s_ = memory[n-1]

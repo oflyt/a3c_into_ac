@@ -14,16 +14,26 @@ class Environment(threading.Thread):
     stop_signal = False
     THREAD_DELAY = 0.001
 
-    def __init__(self, env, rewards, agent, render=False):
+    def __init__(self, env, rewards, agent, exception_bucket, render=False):
         threading.Thread.__init__(self)
 
         self.render = render
         self.env = env
         self.agent = agent
-        
         self.rewards = rewards
+        self.exception_bucket = exception_bucket
         
+    
     def runEpisode(self):
+        """ Run one episode in the environment.
+        
+        1. Get environment state
+        2. Agent acts
+        3. Update the environment
+        4. Remember the state, action and reward
+        5. Go back to 2. until episode is done
+        """
+        
         frame = self.env.reset()
         s = state_util.create(preprocess(frame))
 
@@ -52,16 +62,23 @@ class Environment(threading.Thread):
                 self.rewards.append(R)
                 break
 
-        #logger.log("{}".format(R))
-
     def run(self):
-        while not self.stop_signal:
-            self.runEpisode()
+        "Thread main loop"
+        try:
+            while not self.stop_signal:
+                self.runEpisode()
+        except Exception as e:
+            self.exception_bucket.put(e)
 
     def stop(self):
+        "Send stop signal to thread"
         self.stop_signal = True
         
     def _step(self, env, action, state):
+        """Create a new state.
+        
+        Takes an action twice and adds the frames received to the end of the state frame
+        """
         next_frame_1, reward_1, done_1, _ = env.step(action)
         next_frame_2, reward_2, done_2, _ = env.step(action)
         next_state = state_util.update(state, preprocess(next_frame_1), preprocess(next_frame_2))

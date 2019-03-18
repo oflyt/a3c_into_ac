@@ -7,20 +7,26 @@ from IPython import display
 class Plotter(threading.Thread):
     stop_signal = False
 
-    def __init__(self, rewards):
+    def __init__(self, rewards, agent):
         threading.Thread.__init__(self)
         self.rewards = rewards
+        self.agent = agent
 
     def run(self):
+        "Main loop of thread"
         while not self.stop_signal:
             time.sleep(5)
             self._show(self.rewards)
 
     def stop(self):
+        "Send stop signal to thread"
         self.stop_signal = True
 
     def _show(self, rewards):
-        step_size = 10
+        """Show the trend of the rewards gotten by the agents
+        An average is calculated for every 200 rewards
+        """
+        step_size = 200
         
         size = len(rewards)
         n_points = size//step_size
@@ -40,3 +46,5 @@ class Plotter(threading.Thread):
         
         display.clear_output(wait=True)
         plt.show()
+        
+        print("Epsilon:", self.agent.getEpsilon())

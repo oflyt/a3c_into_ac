@@ -4,12 +4,17 @@ import numpy as np
 
 class Logger:
     
-    def __init__(self, n_rows, header=None):
-        self.n_rows = int(n_rows)
-        self.log_queue = deque(maxlen=n_rows*3)
+    def __init__(self, n_values, header=None):
+        self.n_values = int(n_values)
+        self.log_queue = deque(maxlen=n_values*3)
         self.header = header
     
     def log(self, text):
+        """ Log a new value to the output
+        Will log the previous n_values*3 plus a header if provided.
+        n_values values will be printed on one row
+        """
+        
         self.log_queue.append(text)
         display.clear_output(wait=True)
         if self.header != None:

@@ -3,6 +3,16 @@ from IPython import display
 import numpy as np
 
 def show_state(observation, env_id, step=0, info=""):
+    """ Disply the current state
+    
+    Before anything is displayed, all previous output is cleared.
+    
+    If 4 frames are sent in, i.e., a state. 
+    Then the frames are displyed on top of each other 
+    with newer frames having higher brightness. 
+    
+    Overwise, 1 frame is expected and it will be displayed directly, as is. 
+    """
     plt.figure(3)
     plt.clf()
     
